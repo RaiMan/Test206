@@ -32,14 +32,26 @@ public class Test206 {
   static String imagePath;
   static SXDialog sxDialogImages;
   static Dimension sxDialogImagesSize;
+  static boolean mouseOK = true;
+  static boolean screenOK = true;
 
   @BeforeAll
   static void beforeAll() {
     Commons.info("beforeAll");
+    if (!MouseDevice.isUseable()) {
+      Commons.error("FATAL: Mouse not useable - skipping screen related tests");
+      mouseOK = false;
+    }
+    if (!ScreenDevice.isUseable()) {
+      Commons.error("FATAL: Terminating: Screen capture blocked - skipping screen related tests");
+      screenOK = false;
+    }
     File workDir = Commons.getWorkDir();
     String sikulix_test_tag = System.getenv("SIKULIX_TEST_TAG");
     if (sikulix_test_tag != null && !sikulix_test_tag.isEmpty()) {
       tag = sikulix_test_tag;
+    } else if (!mouseOK || !screenOK) {
+      tag = "Image";
     }
     String sikulix_test_verbose = System.getenv("SIKULIX_TEST_VERBOSE");
     if (sikulix_test_verbose != null) {
@@ -113,24 +125,6 @@ public class Test206 {
       Settings.ActionLogs = false;
       ((Region) element).highlight(matches, 2);
       Settings.ActionLogs = actionLogs;
-    }
-  }
-
-  @Test
-  void test000_Mouse_useable() {
-    if (!MouseDevice.isUseable()) {
-      verbose = true;
-      info("FATAL: Terminating: Mouse not useable");
-      System.exit(1);
-    }
-  }
-
-  @Test
-  void test000_Screen_useable() {
-    if (!ScreenDevice.isUseable()) {
-      verbose = true;
-      info("FATAL: Terminating: Screen capture blocked");
-      System.exit(1);
     }
   }
 
