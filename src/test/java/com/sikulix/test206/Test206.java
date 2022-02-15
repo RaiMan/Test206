@@ -8,6 +8,8 @@ import org.sikuli.script.*;
 import org.sikuli.script.Image;
 import org.sikuli.script.support.Commons;
 import org.sikuli.script.support.RunTime;
+import org.sikuli.script.support.devices.MouseDevice;
+import org.sikuli.script.support.devices.ScreenDevice;
 import org.sikuli.script.support.gui.SXDialog;
 
 import java.awt.*;
@@ -111,6 +113,24 @@ public class Test206 {
       Settings.ActionLogs = false;
       ((Region) element).highlight(matches, 2);
       Settings.ActionLogs = actionLogs;
+    }
+  }
+
+  @Test
+  void test000_Mouse_useable() {
+    if (!MouseDevice.isUseable()) {
+      verbose = true;
+      info("FATAL: Terminating: Mouse not useable");
+      System.exit(1);
+    }
+  }
+
+  @Test
+  void test000_Screen_useable() {
+    if (!ScreenDevice.isUseable()) {
+      verbose = true;
+      info("FATAL: Terminating: Screen capture blocked");
+      System.exit(1);
     }
   }
 
@@ -340,6 +360,7 @@ public class Test206 {
       assertTrue(false);
     }
   }
+
   @Test
   void test035_waitAny_Region() {
     if (!trace()) return;
