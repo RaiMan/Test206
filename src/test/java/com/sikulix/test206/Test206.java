@@ -4,23 +4,20 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.DisplayName;
 import org.sikuli.basics.Debug;
 import org.sikuli.basics.Settings;
-import org.sikuli.script.*;
 import org.sikuli.script.Image;
+import org.sikuli.script.*;
 import org.sikuli.script.support.Commons;
-import org.sikuli.script.support.RunTime;
 import org.sikuli.script.support.devices.MouseDevice;
 import org.sikuli.script.support.devices.ScreenDevice;
 import org.sikuli.script.support.gui.SXDialog;
 
 import java.awt.*;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(DisplayName.class)
 public class Test206 {
@@ -62,17 +59,11 @@ public class Test206 {
     String images = "src/main/resources/images";
     ImagePath.setBundleFolder(new File(workDir, images));
     imagePath = ImagePath.getBundlePath();
-    try {
-      Debug.on(3);
-      OCR.readText(null);
-      Debug.off();
-    } catch (Exception e) {
-    }
     sxDialogImages = new SXDialog("#image; file:" + imagePath + "/SikulixTest001.png;",
-            SXDialog.POSITION.TOPLEFT);
+        SXDialog.POSITION.TOPLEFT);
     sxDialogImagesSize = sxDialogImages.getFinalSize();
     sxDialogText = new SXDialog("#image; file:" + imagePath + "/textTest.png;",
-            SXDialog.POSITION.TOPLEFT);
+        SXDialog.POSITION.TOPLEFT);
     //Commons.info("");
   }
 
@@ -384,25 +375,91 @@ public class Test206 {
     assertTrue(matches.size() == 2 && indexOK && minScore > 0.99);
   }
 
+  //The quick brown fox jumps over the lazy dog
+  //The quick brown fox jumps over the very lazy dog. ... and another lazy dog.
+  //The quick brown fox jumps over the lazy dog.
+  //The quick brown fox jumps over the lazy dog
+  //e The quick brown fox jumps over the lazy dog.
+  //¢ The quick brown fox jumps over the lazy dog.
+  //The quick brown fox jumps over the lazy dog
+  //The quick brown fox jumps over the lazy dog.
+  //The quick brown fox jumps over the very, very lazy dog.
+
+  Region getContentRegion(SXDialog dialog, String img, int hori, int verti) {
+    Region reg = null;
+    Image what = Image.get(img);
+    if (what != null) {
+      SXDialog.onScreen(dialog);
+      List<Match> matches = screen.getAll(what);
+      highlight(screen, matches);
+      Rectangle r = Element.getRectangle(matches);
+      if (r != null) {
+        r.grow(hori, verti);
+        reg = new Region(r);
+        highlight(reg);
+      }
+    }
+    return reg;
+  }
+
+  Image getContentImage(String where, String img, int hori, int verti) {
+    Image content = null;
+    Image what = Image.get("apple");
+    Image imgWhere = Image.get(where);
+    if (imgWhere != null) {
+      List<Match> matches = imgWhere.getAll(what);
+      Rectangle r = Element.getRectangle(matches);
+      if (r != null) {
+        r.grow(hori, verti);
+        content = imgWhere.getSub(r);
+      }
+    }
+    return content;
+  }
+
   @Test
-  void test101_text_Basic() {
+  void test101_text_Basic_Region() {
     if (!trace()) return;
     verbose = true;
     Settings.MinSimilarity = 0.9;
-    SXDialog.onScreen(sxDialogText);
-    List<Match> apples = screen.getAll("apple");
-    highlight(screen, apples);
-    Region reg = null;
-    for (Match apple : apples) {
-      if (reg == null) {
-        reg = apple;
-        continue;
+    Region reg = getContentRegion(sxDialogText, "apple", 0, -65);
+    if (reg != null) {
+      String text = reg.text();
+      String[] lines = text.split("\n");
+      int nlines = lines.length;
+      int expectedNLines = 9;
+      if ((nlines == expectedNLines) &&
+          lines[0].equals("The quick brown fox jumps over the lazy dog") &&
+          lines[expectedNLines - 1].equals("The quick brown fox jumps over the very, very lazy dog.")) {
+        assertTrue(true);
+      } else {
+        fail();
       }
-      reg = reg.union(apple);
+    } else {
+      fail();
     }
-    reg.highlight(2.0);
-    String text = reg.text();
-    Commons.pause(2.0);
   }
 
+  @Test
+  void test101_text_Basic_Image() {
+    if (!trace()) return;
+    //verbose = true;
+    Settings.MinSimilarity = 0.9;
+    Image content = getContentImage("textTest", "apple", 0, -65);
+    if (content != null) {
+      String text = content.text();
+      String[] lines = text.split("\n");
+      int nlines = lines.length;
+      int expectedNLines = 9;
+      if ((nlines == expectedNLines) &&
+          lines[0].equals("The quick brown fox jumps over the lazy dog") &&
+          lines[expectedNLines - 1].equals("The quick brown fox jumps over the very, very lazy dog.")) {
+        assertTrue(true);
+      } else {
+        fail();
+      }
+    } else {
+      fail();
+    }
+  }
 }
