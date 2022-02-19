@@ -32,8 +32,10 @@ public class Test206 {
   static String imagePath;
   static SXDialog sxDialogImages;
   static Dimension sxDialogImagesSize;
+  static SXDialog sxDialogText;
   static boolean mouseOK = true;
   static boolean screenOK = true;
+  static double minSim = Settings.MinSimilarity;
 
   @BeforeAll
   static void beforeAll() {
@@ -60,7 +62,17 @@ public class Test206 {
     String images = "src/main/resources/images";
     ImagePath.setBundleFolder(new File(workDir, images));
     imagePath = ImagePath.getBundlePath();
-    RunTime.loadOpenCV();
+    try {
+      Debug.on(3);
+      OCR.readText(null);
+      Debug.off();
+    } catch (Exception e) {
+    }
+    sxDialogImages = new SXDialog("#image; file:" + imagePath + "/SikulixTest001.png;",
+            SXDialog.POSITION.TOPLEFT);
+    sxDialogImagesSize = sxDialogImages.getFinalSize();
+    sxDialogText = new SXDialog("#image; file:" + imagePath + "/textTest.png;",
+            SXDialog.POSITION.TOPLEFT);
     //Commons.info("");
   }
 
@@ -72,8 +84,6 @@ public class Test206 {
 
   @BeforeEach
   void beforeEach() {
-    sxDialogImages = new SXDialog("#image; file:" + imagePath + "/SikulixTest001.png;", SXDialog.POSITION.TOPLEFT);
-    sxDialogImagesSize = sxDialogImages.getFinalSize();
     Commons.stopTrace();
     //Debug.on(3);
   }
@@ -82,6 +92,7 @@ public class Test206 {
   void afterEach() {
     sxDialogImages.dispose();
     Debug.off();
+    Settings.MinSimilarity = minSim;
     App.focus(appRun);
   }
 
@@ -194,6 +205,7 @@ public class Test206 {
   void test011_find_Region() {
     if (!trace()) return;
     SXDialog.onScreen(sxDialogImages);
+    Commons.pause(3.0);
     try {
       Match match = screen.find("img");
       info("%s %s", match, match.getImage());
@@ -370,6 +382,27 @@ public class Test206 {
     }
     boolean indexOK = matches.get(0).getIndex() == 1 && matches.get(1).getIndex() == 3;
     assertTrue(matches.size() == 2 && indexOK && minScore > 0.99);
+  }
+
+  @Test
+  void test101_text_Basic() {
+    if (!trace()) return;
+    verbose = true;
+    Settings.MinSimilarity = 0.9;
+    SXDialog.onScreen(sxDialogText);
+    List<Match> apples = screen.getAll("apple");
+    highlight(screen, apples);
+    Region reg = null;
+    for (Match apple : apples) {
+      if (reg == null) {
+        reg = apple;
+        continue;
+      }
+      reg = reg.union(apple);
+    }
+    reg.highlight(2.0);
+    String text = reg.text();
+    Commons.pause(2.0);
   }
 
 }
