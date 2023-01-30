@@ -36,13 +36,13 @@ public class Test206 {
 
   @BeforeAll
   static void beforeAll() {
-    Commons.info("beforeAll");
+    Debug.info("beforeAll");
     if (!MouseDevice.isUseable()) {
-      Commons.error("FATAL: Mouse not useable - skipping screen related tests");
+      Debug.error("FATAL: Mouse not useable - skipping screen related tests");
       mouseOK = false;
     }
     if (!ScreenDevice.isUseable()) {
-      Commons.error("FATAL: Terminating: Screen capture blocked - skipping screen related tests");
+      Debug.error("FATAL: Terminating: Screen capture blocked - skipping screen related tests");
       screenOK = false;
     }
     File workDir = Commons.getWorkDir();
@@ -69,7 +69,7 @@ public class Test206 {
 
   @AfterAll
   static void afterAll() {
-    Commons.info("afterAll");
+    Debug.info("afterAll");
     App.focus(appRun);
   }
 
@@ -106,7 +106,7 @@ public class Test206 {
     if (!verbose) {
       return;
     }
-    Commons.info(msg, args);
+    Debug.info(msg, args);
   }
 
   void highlight(Element element) {
